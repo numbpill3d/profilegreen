@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[ENCRYPTED] - Profile Terminal</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier Prime', monospace;
+            background: #0a0a0a;
+            color: #00ff00;
+            overflow-x: hidden;
+            line-height: 1.4;
+        }
+        
+        /* Animated Matrix Background */
+        .matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background: #000;
+        }
+        
+        .matrix-char {
+            position: absolute;
+            color: #00ff00;
+            font-family: 'Courier Prime', monospace;
+            font-size: 12px;
+            animation: fall linear infinite;
+            opacity: 0.7;
+        }
+        
+        @keyframes fall {
+            0% { transform: translateY(-100vh); opacity: 1; }
+            100% { transform: translateY(100vh); opacity: 0; }
+        }
+        
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(5px);
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            margin-top: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 2px solid #00ff00;
+            margin-bottom: 20px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { text-shadow: 0 0 5px #00ff00; }
+            to { text-shadow: 0 0 20px #00ff00, 0 0 30px #00ff00; }
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #00ff00;
+        }
+        
+        .header .subtitle {
+            color: #ffff00;
+            font-size: 1.2em;
+        }
+        
+        .status-bar {
+            background: #001100;
+            padding: 10px;
+            border: 1px solid #00ff00;
+            margin: 20px 0;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        
+        .status-item {
+            color: #00ff00;
+            font-size: 0.9em;
+        }
+        
+        /* Navigation */
+        .nav-container {
+            background: #001100;
+            border: 2px solid #00ff00;
+            margin-bottom: 20px;
+            padding: 10px;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        
+        .nav-tab {
+            background: #000;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: 'Courier Prime', monospace;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+        
+        .nav-tab:hover {
+            background: #00ff00;
+            color: #000;
+            box-shadow: 0 0 10px #00ff00;
+        }
+        
+        .nav-tab.active {
+            background: #003300;
+            color: #00ff00;
+            box-shadow: inset 0 0 10px #00ff00;
+        }
+        
+        /* Main Layout */
+        .main-content {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .sidebar {
+            flex: 0 0 300px;
+            background: #001100;
+            border: 2px solid #00ff00;
+            padding: 20px;
+            height: fit-content;
+        }
+        
+        .content-area {
+            flex: 1;
+            min-width: 600px;
+            background: #001100;
+            border: 2px solid #00ff00;
+            padding: 20px;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Sidebar Widgets */
+        .widget {
+            margin-bottom: 20px;
+            border: 1px solid #00ff00;
+            padding: 15px;
+            background: #000;
+        }
+        
+        .widget h3 {
+            color: #ffff00;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            border-bottom: 1px solid #00ff00;
+            padding-bottom: 5px;
+        }
+        
+        .widget ul {
+            list-style: none;
+        }
+        
+        .widget li {
+            padding: 5px 0;
+            color: #00ff00;
+            border-bottom: 1px dotted #003300;
+        }
+        
+        .widget li:before {
+            content: "> ";
+            color: #ffff00;
+        }
+        
+        /* Scrollbox */
+        .scrollbox {
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #00ff00;
+            padding: 10px;
+            background: #000;
+            margin: 10px 0;
+        }
+        
+        .scrollbox::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .scrollbox::-webkit-scrollbar-track {
+            background: #000;
+        }
+        
+        .scrollbox::-webkit-scrollbar-thumb {
+            background: #00ff00;
+        }
+        
+        /* Content Sections */
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #00ff00;
+            background: #000;
+        }
+        
+        .section h2 {
+            color: #ffff00;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #00ff00;
+            padding-bottom: 10px;
+        }
+        
+        .section p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        
+        /* Gallery */
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .gallery-item {
+            background: #001100;
+            border: 1px solid #00ff00;
+            padding: 10px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .gallery-item:hover {
+            box-shadow: 0 0 15px #00ff00;
+            transform: scale(1.05);
+        }
+        
+        .gallery-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border: 1px solid #00ff00;
+            margin-bottom: 10px;
+            filter: brightness(0.8) hue-rotate(90deg);
+        }
+        
+        /* Buttons */
+        .btn {
+            background: #000;
+            color: #00ff00;
+            border: 2px solid #00ff00;
+            padding: 12px 25px;
+            cursor: pointer;
+            font-family: 'Courier Prime', monospace;
+            transition: all 0.3s ease;
+            margin: 5px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            background: #00ff00;
+            color: #000;
+            box-shadow: 0 0 15px #00ff00;
+        }
+        
+        /* Collapsible Content */
+        .collapsible {
+            background: #001100;
+            border: 1px solid #00ff00;
+            margin: 10px 0;
+        }
+        
+        .collapsible-header {
+            background: #000;
+            color: #00ff00;
+            padding: 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #00ff00;
+        }
+        
+        .collapsible-header:hover {
+            background: #003300;
+        }
+        
+        .collapsible-content {
+            padding: 15px;
+            display: none;
+        }
+        
+        .collapsible-content.active {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from { opacity: 0; max-height: 0; }
+            to { opacity: 1; max-height: 500px; }
+        }
+        
+        /* Footer */
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            padding: 20px;
+            border-top: 2px solid #00ff00;
+            background: #001100;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        
+        .footer-links a {
+            color: #00ff00;
+            text-decoration: none;
+            border: 1px solid #00ff00;
+            padding: 8px 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .footer-links a:hover {
+            background: #00ff00;
+            color: #000;
+        }
+        
+        /* Popup */
+        .popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .popup-content {
+            background: #001100;
+            border: 3px solid #00ff00;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+        }
+        
+        .popup-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #00ff00;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                flex: none;
+            }
+            
+            .content-area {
+                min-width: auto;
+            }
+            
+            .nav-tabs {
+                flex-direction: column;
+            }
+            
+            .gallery {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .container {
+                margin: 10px;
+                padding: 15px;
+            }
+        }
+        
+        /* Scrolling Text */
+        .scrolling-text {
+            overflow: hidden;
+            white-space: nowrap;
+            background: #000;
+            border: 1px solid #00ff00;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        
+        .scrolling-text span {
+            display: inline-block;
+            animation: scroll 15s linear infinite;
+        }
+        
+        @keyframes scroll {
+            from { transform: translateX(100%); }
+            to { transform: translateX(-100%); }
+        }
+        
+        /* Blinking Cursor */
+        .cursor {
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="matrix-bg" id="matrixBg"></div>
+    
+    <div class="container">
+        <header class="header">
+            <h1>[CLASSIFIED] UNDERGROUND PROFILE<span class="cursor">_</span></h1>
+            <div class="subtitle">*** SECURE TERMINAL ACCESS GRANTED ***</div>
+            <div class="scrolling-text">
+                <span>*** ENCRYPTED CONNECTION ESTABLISHED *** TOR RELAY ACTIVE *** NO LOGS POLICY *** ZERO KNOWLEDGE ARCHITECTURE ***</span>
+            </div>
+        </header>
+        
+        <div class="status-bar">
+            <div class="status-item">STATUS: ONLINE</div>
+            <div class="status-item">ENCRYPTION: AES-256</div>
+            <div class="status-item">LOCATION: [REDACTED]</div>
+            <div class="status-item">UPTIME: 2847 DAYS</div>
+            <div class="status-item">CONNECTIONS: 7</div>
+        </div>
+        
+        <div class="nav-container">
+            <div class="nav-tabs">
+                <div class="nav-tab active" onclick="showTab('profile')">PROFILE</div>
+                <div class="nav-tab" onclick="showTab('services')">SERVICES</div>
+                <div class="nav-tab" onclick="showTab('portfolio')">PORTFOLIO</div>
+                <div class="nav-tab" onclick="showTab('tools')">TOOLS</div>
+                <div class="nav-tab" onclick="showTab('contact')">CONTACT</div>
+                <div class="nav-tab" onclick="showTab('logs')">LOGS</div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <aside class="sidebar">
+                <div class="widget">
+                    <h3>CURRENT STATUS</h3>
+                    <div class="scrollbox">
+                        <div>> System operational</div>
+                        <div>> All tunnels active</div>
+                        <div>> Firewall: ENABLED</div>
+                        <div>> IDS: MONITORING</div>
+                        <div>> VPN: CONNECTED</div>
+                        <div>> Tor: 3 HOPS ACTIVE</div>
+                        <div>> Last scan: CLEAN</div>
+                        <div>> Backup: SYNCED</div>
+                        <div>> Temp: 47°C</div>
+                        <div>> Load: 0.73</div>
+                        <div>> Memory: 67% FREE</div>
+                        <div>> Disk: ENCRYPTED</div>
+                    </div>
+                </div>
+                
+                <div class="widget">
+                    <h3>SPECIALTIES</h3>
+                    <ul>
+                        <li>Penetration Testing</li>
+                        <li>Network Security</li>
+                        <li>Cryptography</li>
+                        <li>Reverse Engineering</li>
+                        <li>Exploit Development</li>
+                        <li>Digital Forensics</li>
+                        <li>Social Engineering</li>
+                        <li>Red Team Operations</li>
+                        <li>OSINT Gathering</li>
+                        <li>Malware Analysis</li>
+                    </ul>
+                </div>
+                
+                <div class="widget">
+                    <h3>PREFERENCES</h3>
+                    <ul>
+                        <li>Linux > Windows</li>
+                        <li>CLI > GUI</li>
+                        <li>Open Source > Proprietary</li>
+                        <li>Self-Hosted > Cloud</li>
+                        <li>Privacy > Convenience</li>
+                        <li>Security > Performance</li>
+                        <li>Offline > Online</li>
+                        <li>Decentralized > Centralized</li>
+                    </ul>
+                </div>
+                
+                <div class="widget">
+                    <h3>RECENT ACTIVITY</h3>
+                    <div class="scrollbox">
+                        <div>> [02:47] Vulnerability scan completed</div>
+                        <div>> [02:33] Report generated</div>
+                        <div>> [02:21] Exploit verified</div>
+                        <div>> [02:15] Network mapped</div>
+                        <div>> [02:08] Access gained</div>
+                        <div>> [01:59] Payload deployed</div>
+                        <div>> [01:45] Shell established</div>
+                        <div>> [01:32] Privilege escalated</div>
+                        <div>> [01:27] Data exfiltrated</div>
+                        <div>> [01:19] Cleanup initiated</div>
+                        <div>> [01:05] Connection closed</div>
+                        <div>> [00:58] Logs wiped</div>
+                    </div>
+                </div>
+            </aside>
+            
+            <main class="content-area">
+                <div id="profile" class="tab-content active">
+                    <div class="section">
+                        <h2>OPERATOR PROFILE</h2>
+                        <p>Greetings, digital wanderer. You've stumbled into the secure terminal of a certified penetration tester operating within the shadows of corporate conglomerates. This ain't your average LinkedIn profile - this here's a hardened digital fortress built for those who understand that privacy ain't paranoia, it's survival.</p>
+                        
+                        <div class="collapsible">
+                            <div class="collapsible-header" onclick="toggleCollapsible(this)">BACKGROUND INTEL [CLICK TO DECRYPT]</div>
+                            <div class="collapsible-content">
+                                <p>Been crawling through digital trenches for over a decade, poking holes in systems that others claim are bulletproof. Started with a Commodore 64 and a copy of 2600 Magazine, graduated to cracking WEP keys in coffee shops, and now I'm the ghost in the machine that corporations pay handsomely to find their weaknesses before the real bad actors do.</p>
+                                <p>Current operations involve penetration testing for a conglomerate of major companies - can't name names (NDAs thicker than molasses), but let's just say if you've used the internet today, you've probably touched something I've secured.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="collapsible">
+                            <div class="collapsible-header" onclick="toggleCollapsible(this)">OPERATIONAL PHILOSOPHY [CLASSIFIED]</div>
+                            <div class="collapsible-content">
+                                <p>Every system has a backdoor - it's just a matter of finding it before someone else does. I operate on the principle that security through obscurity is like building a house of cards in a hurricane. Real security comes from assuming everyone's watching, everyone's listening, and everyone wants what you've got.</p>
+                                <p>Trust is a luxury I can't afford. Every connection is potentially compromised, every communication is assumed to be intercepted, and every system is guilty until proven innocent. That's not paranoia - that's professional survival.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="services" class="tab-content">
+                    <div class="section">
+                        <h2>AVAILABLE SERVICES</h2>
+                        <p>Professional consultation for organizations serious about their digital security posture. All services conducted within legal frameworks and proper authorization.</p>
+                        
+                        <div class="gallery">
+                            <div class="gallery-item" onclick="showPopup('Penetration Testing')">
+                                <div style="height: 150px; background: #001100; border: 1px solid #00ff00; display: flex; align-items: center; justify-content: center;">
+                                    <div>PEN TEST<br/>SUITE</div>
+                                </div>
+                                <div>Network Penetration Testing</div>
+                            </div>
+                            <div class="gallery-item" onclick="showPopup('Red Team Operations')">
+                                <div style="height: 150px; background: #001100; border: 1px solid #00ff00; display: flex; align-items: center; justify-content: center;">
+                                    <div>RED TEAM<br/>OPS</div>
+                                </div>
+                                <div>Red Team Exercises</div>
+                            </div>
+                            <div class="gallery-item" onclick="showPopup('Security Audits')">
+                                <div style="height: 150px; background: #001100; border: 1px solid #00ff00; display: flex; align-items: center; justify-content: center;">
+                                    <div>SECURITY<br/>AUDIT</div>
+                                </div>
+                                <div>Comprehensive Security Audits</div>
+                            </div>
+                            <div class="gallery-item" onclick="showPopup('Incident Response')">
+                                <div style="height: 150px; background: #001100; border: 1px solid #00ff00; display: flex; align-items: center; justify-content: center;">
+                                    <div>INCIDENT<br/>RESPONSE</div>
+                                </div>
+                                <div>Emergency Response</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="portfolio" class="tab-content">
+                    <div class="section">
+                        <h2>CASE STUDIES [SANITIZED]</h2>
+                        <p>Selected engagements with identifying information removed to protect client confidentiality.</p>
+                        
+                        <div class="collapsible">
+                            <div class="collapsible-header" onclick="toggleCollapsible(this)">CASE ALPHA - FINANCIAL INSTITUTION</div>
+                            <div class="collapsible-content">
+                                <p>Target: Major financial services provider with 50,000+ employees</p>
+                                <p>Objective: External penetration test of public-facing infrastructure</p>
+                                <p>Findings: 23 critical vulnerabilities, 47 high-severity issues</p>
+                                <p>Impact: Prevented potential $2.3M data breach</p>
+                                <p>Duration: 3 weeks</p>
+                                <p>Status: [REMEDIATED]</p>
+                            </div>
+                        </div>
+                        
+                        <div class="collapsible">
+                            <div class="collapsible-header" onclick="toggleCollapsible(this)">CASE BETA - HEALTHCARE NETWORK</div>
+                            <div class="collapsible-content">
+                                <p>Target: Regional healthcare provider network</p>
+                                <p>Objective: HIPAA compliance assessment and internal network testing</p>
+                                <p>Findings: Critical SQL injection in patient portal, privilege escalation in AD</p>
+                                <p>Impact: PHI of 150,000 patients secured</p>
+                                <p>Duration: 2 weeks</p>
+                                <p>Status: [REMEDIATED]</p>
+                            </div>
+                        </div>
+                        
+                        <div class="collapsible">
+                            <div class="collapsible-header" onclick="toggleCollapsible(this)">CASE GAMMA - MANUFACTURING</div>
+                            <div class="collapsible-content">
+                                <p>Target: Industrial manufacturing conglomerate</p>
+                                <p>Objective: OT/IT convergence security assessment</p>
+                                <p>Findings: Air-gapped network not so air-gapped, HMI vulnerabilities</p>
+                                <p>Impact: Prevented potential production disruption</p>
+                                <p>Duration: 4 weeks</p>
+                                <p>Status: [ONGOING MONITORING]</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="tools" class="tab-content">
+                    <div class="section">
+                        <h2>ARSENAL</h2>
+                        <p>Tools of the trade, battle-tested and ready for deployment. No script kiddie toys here - only professional-grade equipment.</p>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                            <div class="widget">
+                                <h3>RECONNAISSANCE</h3>
+                                <ul>
+                                    <li>Nmap / Masscan</li>
+                                    <li>Shodan / Censys</li>
+                                    <li>Recon-ng</li>
+                                    <li>TheHarvester</li>
+                                    <li>Maltego</li>
+                                    <li>Subfinder</li>
+                                    <li>Amass</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="widget">
+                                <h3>EXPLOITATION</h3>
+                                <ul>
+                                    <li>Metasploit Framework</li>
+                                    <li>Cobalt Strike</li>
+                                    <li>Empire PowerShell</li>
+                                    <li>Custom Exploits</li>
+                                    <li>Social Engineer Toolkit</li>
+                                    <li>BeEF Framework</li>
+                                    <li>SQLmap</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="widget">
+                                <h3>POST-EXPLOITATION</h3>
+                                <ul>
+                                    <li>Mimikatz</li>
+                                    <li>BloodHound</li>
+                                    <li>PowerSploit</li>
+                                    <li>Empire</li>
+                                    <li>Covenant C2</li>
+                                    <li>Sliver</li>
+                                    <li>Custom C2 Frameworks</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="widget">
+                                <h3>ANALYSIS</h3>
+                                <ul>
+                                    <li>Wireshark</li>
+                                    <li>Burp Suite Professional</li>
+                                    <li>OWASP ZAP</li>
+                                    <li>IDA Pro</li>
+                                    <li>Ghidra</li>
+                                    <li>Volatility</li>
+                                    <li>YARA Rules</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="contact" class="tab-content">
+                    <div class="section">
+                        <h2>SECURE COMMUNICATIONS</h2>
+                        <p>Contact channels for legitimate business inquiries only. All communications are logged and monitored for security purposes.</p>
+                        
+                        <div class="widget">
+                            <h3>PREFERRED CONTACT METHODS</h3>
+                            <ul>
+                                <li>Signal: [AVAILABLE ON REQUEST]</li>
+                                <li>ProtonMail: [BUSINESS INQUIRIES]</li>
+                                <li>Wickr: [URGENT MATTERS]</li>
+                                <li>Keybase: [VERIFIED IDENTITY]</li>
+                                <li>Tox: [PEER-TO-PEER]</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="widget">
+                            <h3>PGP FINGERPRINT</h3>
+                            <div style="background: #000; padding: 10px; font-family: monospace; border: 1px solid #00ff00;">
+                                1A2B 3C4D 5E6F 7890 ABCD<br/>
+                                EFGH IJKL MNOP QRST UVWX<br/>
+                                YZ12 3456 7890 ABCD EFGH
+                            </div>
+                        </div>
+                        
+                        <div class="widget">
+                            <h3>OPERATIONAL SECURITY NOTES</h3>
+                            <ul>
+                                <li>No cleartext communications</li>
+                                <li>Identity verification required</li>
+                                <li>Business use only</li>
+                                <li>Response time: 24-48 hours</li>
+                                <li>Emergency channel available</li>
+                            </ul>
+                        </div>
+                        
+                        <button class="btn" onclick="showPopup('Contact Form')">INITIATE SECURE SESSION</button>
+                    </div>
+                </div>
+                
+                <div id="logs" class="tab-content">
+                    <div class="section">
+                        <h2>SYSTEM LOGS</h2>
+                        <div class="scrollbox" style="height: 400px; font-family: monospace;">
+                            <div>[2025-05-26 02:47:33] INFO: Vulnerability scan completed on target 192.168.1.0/24</div>
+                            <div>[2025-05-26 02:46:22] DEBUG: Port 445 open on 192.168.1.15</div>
+                            <div>[2025-05-26 02:45:11] INFO: SMB enumeration successful</div>
+                            <div>[2025-05-26 02:44:55] WARN: Default credentials detected</div>
+                            <div>[2025-05-26 02:43:33] INFO: Shell established on target system</div>
+                            <div>[2025-05-26 02:42:17] DEBUG: Privilege escalation attempt successful</div>
+                            <div>[2025-05-26 02:41:05] INFO: Local admin access gained</div>
+                            <div>[2025-05-26 02:40:44] DEBUG: Dumping SAM database</div>
+                            <div>[2025-05-26 02:39:28] INFO: Password hashes extracted</div>
+                            <div>[2025-05-26 02:38:16] DEBUG: Cracking passwords with hashcat</div>
+                            <div>[2025-05-26 02:37:22] WARN: Weak passwords identified</div>
+                            <div>[2025-05-26 02:36:09] INFO: Domain admin credentials obtained</div>
+                            <div>[2025-05-26 02:35:44] DEBUG: Active Directory enumeration started</div>
+                            <div>[2025-05-26 02:34:33] INFO: BloodHound data collected</div>
+                            <div>[2025-05-26 02:33:15] DEBUG: Attack path identified</div>
+                            <div>[2025-05-26 02:32:07] INFO: Domain compromise complete</div>
+                            <div>[2025-05-26 02:31:28] DEBUG: Generating report</div>
+                            <div>[2025-05-26 02:30:19] INFO: Evidence collected and documented</div>
+                            <div>[2025-05-26 02:29:44] DEBUG: Cleaning up artifacts</div>
+                            <div>[2025-05-26 02:28:33] INFO: Connection terminated</div>
+                            <div>[2025-05-26 02:27:15] DEBUG: Logs sanitized</div>
+                            <div>[2025-05-26 02:26:07] INFO: Session closed successfully</div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+        
+        <footer class="footer">
+            <div class="footer-links">
+                <a href="#" onclick="showPopup('Terms of Service')">TERMS OF SERVICE</a>
+                <a href="#" onclick="showPopup('Privacy Policy')">PRIVACY POLICY</a>
+                <a href="#" onclick="showPopup('Legal Notice')">LEGAL NOTICE</a>
+                <a href="#" onclick="showPopup('Disclaimer')">DISCLAIMER</a>
+            </div>
+            <div>
+                <p>*** ALL ACTIVITIES CONDUCTED UNDER PROPER AUTHORIZATION ***</p>
+                <p>*** FOR LEGITIMATE SECURITY TESTING PURPOSES ONLY ***</p>
+                <p>*** UNAUTHORIZED ACCESS IS STRICTLY PROHIBITED ***</p>
+            </div>
+        </footer>
+    </div>
+    
+    <!-- Popup Modal -->
+    <div class="popup" id="popup">
+        <div class="popup-content">
+            <button class="popup-close" onclick="closePopup()">[X]</button>
+            <h3 id="popup-title">TITLE</h3>
+            <p id="popup-text">Content goes here...</p>
+            <button class="btn" onclick="closePopup()">CLOSE</button>
+        </div>
+    </div>
+    
+    <script>
+        // Matrix Background Animation
+        function createMatrixEffect() {
+            const matrixBg = document.getElementById('matrixBg');
+            const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+            
+            for (let i = 0; i < 50; i++) {
+                const char = document.createElement('div');
+                char.className = 'matrix-char';
+                char.textContent = chars[Math.floor(Math.random() * chars.length)];
+                char.style.left = Math.random() * 100 + '%';
+                char.style.animationDelay = Math.random() * 15 + 's';
+                char.style.animationDuration = (Math.random() * 10 + 5) + 's';
+                matrixBg.appendChild(char);
+            }
+        }
+        
+        // Tab Navigation
+        function showTab(tabName) {
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+            
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+        
+        // Collapsible Content
+        function toggleCollapsible(header) {
+            const content = header.nextElementSibling;
+            content.classList.toggle('active');
+        }
+        
+        // Popup Functions
+        function showPopup(title) {
+            const popup = document.getElementById('popup');
+            const popupTitle = document.getElementById('popup-title');
+            const popupText = document.getElementById('popup-text');
+            
+            popupTitle.textContent = title;
+            
+            const popupContent = {
+                'Penetration Testing': 'Comprehensive network penetration testing services including external, internal, and wireless assessments. Full scope testing with detailed reporting and remediation guidance.',
+                'Red Team Operations': 'Simulated adversarial attacks to test your organization\'s detection and response capabilities. Multi-vector attacks using latest TTPs.',
+                'Security Audits': 'Complete security posture assessment including policy review, configuration analysis, and compliance validation.',
+                'Incident Response': '24/7 emergency response services for active security incidents. Containment, eradication, and recovery support.',
+                'Contact Form': 'Secure communication channel initialization required. Please use encrypted channels for all business communications. Response time: 24-48 hours.',
+                'Terms of Service': 'All services provided under strict legal framework. Client authorization required for all testing activities. No unauthorized access permitted.',
+                'Privacy Policy': 'Zero-log policy in effect. All client data handled with utmost confidentiality. Encrypted storage and transmission only.',
+                'Legal Notice': 'Licensed penetration testing professional. All activities conducted within legal boundaries with proper authorization.',
+                'Disclaimer': 'For authorized security testing only. User assumes all responsibility for proper authorization and legal compliance.'
+            };
+            
+            popupText.textContent = popupContent[title] || 'Information not available.';
+            popup.style.display = 'flex';
+        }
+        
+        function closePopup() {
+            document.getElementById('popup').style.display = 'none';
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            createMatrixEffect();
+            
+            // Add some dynamic log entries
+            setInterval(function() {
+                const logBox = document.querySelector('#logs .scrollbox');
+                const timestamp = new Date().toISOString().replace('T', ' ').substr(0, 19);
+                const activities = [
+                    'Port scan initiated',
+                    'Vulnerability detected',
+                    'Service enumerated',
+                    'Credential harvested',
+                    'Shell established',
+                    'Privilege escalated',
+                    'Data exfiltrated',
+                    'Persistence established',
+                    'Cleanup completed'
+                ];
+                
+                const newLog = document.createElement('div');
+                newLog.textContent = `[${timestamp}] INFO: ${activities[Math.floor(Math.random() * activities.length)]}`;
+                logBox.appendChild(newLog);
+                logBox.scrollTop = logBox.scrollHeight;
+                
+                // Keep only last 50 entries
+                while (logBox.children.length > 50) {
+                    logBox.removeChild(logBox.firstChild);
+                }
+            }, 5000);
+        });
+        
+        // Click outside popup to close
+        window.onclick = function(event) {
+            const popup = document.getElementById('popup');
+            if (event.target === popup) {
+                closePopup();
+            }
+        }
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closePopup();
+            }
+        });
+    </script>
+</body>
+</html>
